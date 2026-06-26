@@ -1,0 +1,30 @@
+{
+  "name": "hometax-nest-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.7",
+    "@nestjs/core": "^11.1.7",
+    "@nestjs/platform-express": "^11.1.7",
+    "axios": "^1.12.2",
+    "form-data": "^4.0.4",
+    "multer": "^2.0.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.5.2",
+    "eslint": "^9.36.0",
+    "typescript": "^5.9.2"
+  }
+}
