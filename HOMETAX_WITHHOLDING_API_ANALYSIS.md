@@ -534,9 +534,39 @@ request        <- dma_search_s1 전체
 fileAdmDVOList <- dlt_fileList
 ```
 
+여기서 `request`는 서버 DVO 이름처럼 보이지만, 공통 JS `nts_makeSrvReqData`의 `search` 타입 처리는 `dma_search_s1`의 각 필드를 요청 JSON 최상위로 펼친다. 따라서 API에서 아래처럼 보내면 안 된다.
+
+```json
+{
+  "request": {
+    "bsafClCd": "004",
+    "itrfCd": "14"
+  },
+  "fileAdmDVOList": []
+}
+```
+
+실제 브라우저 구조는 아래에 가깝다.
+
+```json
+{
+  "bsafClCd": "004",
+  "itrfCd": "14",
+  "fileAdmDVOList": []
+}
+```
+
 `dma_search_s1`에는 `orcFleNm`, `storedFileList`, `fileSizeList`뿐 아니라 `ATTCMZAA002R01`에서 받은 처리 제한값(`minTrtFleSz`, `maxTrtFleSz`, `minTrtScnt`, `maxTrtScnt`, `frVrfTrtScnt`, `cntnVrfTrtScnt`, `sbmsTrtScnt`)과 빈 상태값들이 같이 들어간다. 일부 필드만 손으로 구성하면 홈택스가 `ETICMZ0003 입력데이터가 올바르지 않습니다`를 반환할 수 있다.
 
-현재 Nest 구현은 화면의 `dma_search_s1` 키 전체를 맞춰 보내도록 조정했다.
+현재 Nest 구현은 화면의 `dma_search_s1` 키 전체를 최상위 필드로 맞춰 보내도록 조정했다. 이 조정 후 `20260213C103900.01` 테스트에서 `ATERNABB001A01`은 `trnsPrgrStat=10`으로 진입했고, `ATERNABB001R07` 조회 결과 `trnsPrgrStat=11`, `fleFrVrfErrScnt=1`, `fleFrVrfErrClusCnt=2`를 받았다. 즉 API 호출 구조는 통과했고, 해당 샘플 파일은 홈택스 형식검증상 오류 파일이다.
+
+브라우저 성공 요청과 맞춰야 하는 세션/헤더:
+
+- `NTS_REQUEST_SYSTEM_CODE_P=TEHT`
+- `Origin: https://hometax.go.kr`
+- `Referer: https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&tmIdx=41&tm2lIdx=4106000000&tm3lIdx=4106010000`
+
+`wqAction.do` URL은 `https://teht.hometax.go.kr`이지만, 브라우저 요청의 origin/referrer는 포털 도메인이다.
 
 ## NestJS 테스트용 API 흐름
 
@@ -547,13 +577,18 @@ body: { name, phoneNumber, birthday }
 POST /hometax/auth/confirm
 body: {}
 
-GET /hometax/session
+GET /hometax/auth/session
 response: { userId, tin, pubcUserNo, txprDscmNo, txaaYn, userClsfCd }
 
-POST /hometax/withholding/validate
+GET /hometax/business-places
+
+POST /hometax/withholding-tax/validate
 multipart: file
 
-POST /hometax/withholding/submit
+GET /hometax/withholding-tax/submit-targets
+query: fleSbmsCvaId
+
+POST /hometax/withholding-tax/submit
 body: { fleSbmsCvaId, confirmSubmit: true }
 ```
 

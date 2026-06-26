@@ -41,10 +41,10 @@ export class HometaxWqActionClient {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        Origin: options.baseURL ?? 'https://teht.hometax.go.kr',
+        Origin: 'https://hometax.go.kr',
         Referer:
           options.referer ??
-          'https://teht.hometax.go.kr/websquare/websquare.html?w2xPath=/ui/rn/z/UTERNAAZ0Z11.xml',
+          'https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&tmIdx=41&tm2lIdx=4106000000&tm3lIdx=4106010000',
       },
     });
   }

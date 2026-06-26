@@ -45,5 +45,6 @@ export class HometaxTehtSessionClient {
     );
 
     session.tehtReady = true;
+    session.cookies.set('NTS_REQUEST_SYSTEM_CODE_P', 'TEHT');
   }
 }

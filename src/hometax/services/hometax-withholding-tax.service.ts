@@ -161,11 +161,9 @@ export class HometaxWithholdingTaxService {
       baseURL: 'https://teht.hometax.go.kr',
       realScreenId: 'UTERNAA0Z044',
       payload: {
-        request: {
-          bsafClCd: '004',
-          itrfCd: '14',
-          cvaKndCd: 'FF000',
-        },
+        bsafClCd: '004',
+        itrfCd: '14',
+        cvaKndCd: 'FF000',
       },
     });
   }
@@ -218,19 +216,23 @@ export class HometaxWithholdingTaxService {
       localfileList: upload.originalName,
     };
 
+    const payload = {
+      ...request,
+      fileAdmDVOList: [
+        {
+          localFlePth: upload.originalName,
+        },
+      ],
+    };
+
+    this.logger.debug(`A01 request payload: ${this.responseSummary(payload)}`);
+
     return this.wqActionClient.call({
       actionId: 'ATERNABB001A01',
       screenId: 'UTERNAAZ0Z11',
       baseURL: 'https://teht.hometax.go.kr',
       realScreenId: 'UTERNAA0Z044',
-      payload: {
-        request,
-        fileAdmDVOList: [
-          {
-            localFlePth: upload.originalName,
-          },
-        ],
-      },
+      payload,
     });
   }
 
@@ -255,11 +257,9 @@ export class HometaxWithholdingTaxService {
       baseURL: 'https://teht.hometax.go.kr',
       realScreenId: 'UTERNAA0Z044',
       payload: {
-        request: {
-          bsafClCd: '004',
-          itrfCd: '14',
-          cvaKndCd: 'FF000',
-        },
+        bsafClCd: '004',
+        itrfCd: '14',
+        cvaKndCd: 'FF000',
       },
     });
   }
@@ -272,11 +272,9 @@ export class HometaxWithholdingTaxService {
       baseURL: 'https://teht.hometax.go.kr',
       realScreenId: 'UTERNAA0Z044',
       payload: {
-        request: {
-          bsafClCd: '004',
-          itrfCd: '14',
-          cvaKndCd: 'FF000',
-        },
+        bsafClCd: '004',
+        itrfCd: '14',
+        cvaKndCd: 'FF000',
       },
     });
     const state = this.extractValidationState(response);
