@@ -37,6 +37,8 @@ interface SimplePaymentStatementProfile {
   };
 }
 
+// 홈택스 간이지급명세서 변환파일 화면은 사업소득/기타소득이 같은 screenId를 공유한다.
+// 실제 차이는 지급명세서 종류 코드와 일부 body 값이므로 profile로 분리해두면 액션 순서를 재사용할 수 있다.
 interface TransmissionLimits {
   minTrtFleSz: string;
   maxTrtFleSz: string;
@@ -137,6 +139,8 @@ export class HometaxSimplePaymentStatementService {
 
     this.logger.log(`simple statement validate start: ${profile.label}, ${file.originalname}, ${file.size} bytes`);
 
+    // 화면 진입 직후 permission/initialize/common action이 호출된다.
+    // 일부 action은 검증 성공에 직접 필요하지 않을 수 있지만, 홈택스 화면 세션을 실제 브라우저와 최대한 맞추기 위해 유지한다.
     diagnostics.permission = await this.tryCall('permission', () =>
       this.permissionClient.requestScreenPermission(profile.screenId),
     );
@@ -149,16 +153,20 @@ export class HometaxSimplePaymentStatementService {
       this.callProfileAction(profile, profile.actions.common, request, dto),
     );
 
+    // RAONKUpload는 시작 요청, multipart blob 업로드, 완료 요청의 3단계를 내부 client에서 처리한다.
     const upload = await this.uploadClient.uploadElectronicFile(file, {
       baseURL: dto.uploadBaseURL ?? dto.baseURL ?? profile.baseURL,
       referer: dto.referer ?? profile.referer,
       uploadTypeCd: dto.uploadTypeCd ?? profile.uploadTypeCd,
     });
 
+    // ATTCMZAA002R01 응답에는 홈택스가 허용하는 파일 크기와 처리 건수 한도가 들어온다.
+    // 값이 비어 있으면 HAR에서 확인한 기본값을 사용한다.
     const limits = this.extractTransmissionLimits(
       await this.callProfileAction(profile, profile.actions.loadLimits, this.buildLimitRequest(profile, dto), dto),
     );
 
+    // 업로드 결과의 서버 경로와 파일명을 body에 넣어 형식검증 action을 호출한다.
     const validationRequest = this.buildValidationRequest(profile, dto, upload, upload.size, limits);
     diagnostics.checkInput = await this.tryCall('checkInput', () =>
       this.callProfileAction(profile, profile.actions.checkInput, validationRequest, dto),
@@ -170,6 +178,7 @@ export class HometaxSimplePaymentStatementService {
       this.callProfileAction(profile, profile.actions.beforeFormatValidation, validationRequest, dto),
     );
 
+    // trnsPrgrStat가 있어야 이후 polling 가능하다. 없으면 요청 body 매핑이 틀린 것이므로 원 raw 응답을 반환한다.
     const formatResponse = await this.callProfileAction(
       profile,
       profile.actions.requestFormatValidation,
@@ -192,6 +201,7 @@ export class HometaxSimplePaymentStatementService {
       };
     }
 
+    // trnsPrgrStat 10/20은 처리 중이다. 화면처럼 주기적으로 상태조회 action을 호출한다.
     const finalState = await this.pollUntilNextStep(profile, dto, formatState);
     const status = this.toPublicStatus(finalState.trnsPrgrStat);
 
@@ -210,6 +220,7 @@ export class HometaxSimplePaymentStatementService {
     profile: SimplePaymentStatementProfile,
     dto: ValidateSimplePaymentStatementFileDto,
   ): Record<string, string> {
+    // 한도조회 계열 action은 실제 파일 정보 없이 신고서 종류/업무구분 코드만 요구한다.
     return {
       bsafClCd: dto.bsafClCd ?? profile.defaults.bsafClCd,
       itrfCd: dto.itrfCd ?? profile.defaults.itrfCd,
@@ -225,10 +236,14 @@ export class HometaxSimplePaymentStatementService {
     limits?: TransmissionLimits,
   ): Record<string, unknown> {
     const sessionMap = this.sessionService.requireSessionMap();
+    // 간이지급명세서 검증 화면의 지급연월은 UI 입력값이다.
+    // 호출자가 생략하면 테스트 편의를 위해 서버 현재 연월을 넣는다.
     const paymentYear = dto.paymentYear ?? String(new Date().getFullYear());
     const paymentMonth = (dto.paymentMonth ?? String(new Date().getMonth() + 1)).padStart(2, '0');
     const filingType = this.filingTypeCode(dto.filingType);
 
+    // wqAction payload는 화면 JS가 만드는 DVO 형태를 그대로 흉내낸다.
+    // 빈 문자열도 의미가 있으므로 불필요해 보여도 제거하지 않는다.
     return {
       cvaId: '',
       cntnVrfErrScnt: '',
@@ -293,6 +308,7 @@ export class HometaxSimplePaymentStatementService {
     payload: unknown,
     dto?: ValidateSimplePaymentStatementFileDto,
   ): Promise<unknown> {
+    // HometaxWqActionClient가 NTS payload 암호화와 HMAC suffix 생성을 담당한다.
     this.logger.debug(`${actionId} payload: ${this.responseSummary(payload)}`);
     return this.wqActionClient.call({
       actionId,
@@ -305,6 +321,7 @@ export class HometaxSimplePaymentStatementService {
   }
 
   private async tryCall(label: string, call: () => Promise<unknown>): Promise<unknown> {
+    // 화면 보정용 action이 실패해도 핵심 검증 흐름을 계속 보기 위해 diagnostic으로만 기록한다.
     try {
       return await call();
     } catch (error) {
@@ -340,6 +357,7 @@ export class HometaxSimplePaymentStatementService {
   }
 
   private extractTransmissionLimits(response: unknown): TransmissionLimits {
+    // wqActionClient는 action별로 response를 root 또는 response/request에 담을 수 있어 후보 위치를 같이 본다.
     const obj = response as Record<string, unknown>;
     const source = (obj.response ?? obj.request ?? obj) as Record<string, unknown>;
     return {
@@ -354,6 +372,7 @@ export class HometaxSimplePaymentStatementService {
   }
 
   private extractValidationState(response: unknown): ValidationState {
+    // 홈택스 응답은 trnsPrgrStat가 root에 있거나 첫 번째 파일 DVO 안에 들어오는 경우가 있다.
     const obj = response as Record<string, unknown>;
     const source = (obj.response ?? obj.request ?? obj) as Record<string, unknown>;
     const list = obj.orcFleRcvnDVOList as unknown[] | undefined;
@@ -370,6 +389,7 @@ export class HometaxSimplePaymentStatementService {
     profile: SimplePaymentStatementProfile,
     dto: ValidateSimplePaymentStatementFileDto,
   ): Record<string, unknown> {
+    // 응답에는 어떤 화면/action/profile로 검증했는지 남겨서 HAR와 비교하기 쉽게 한다.
     return {
       incomeType: profile.incomeType,
       label: profile.label,
@@ -384,6 +404,7 @@ export class HometaxSimplePaymentStatementService {
   }
 
   private toPublicStatus(trnsPrgrStat?: string): string {
+    // 홈택스 진행상태 코드를 API 사용자에게 읽기 쉬운 상태값으로 바꾼다.
     if (trnsPrgrStat === '11') {
       return 'FORMAT_ERROR';
     }
@@ -400,6 +421,7 @@ export class HometaxSimplePaymentStatementService {
   }
 
   private filingTypeCode(filingType?: ValidateSimplePaymentStatementFileDto['filingType']): string {
+    // 화면의 신고구분 radio 값을 홈택스 코드로 변환한다.
     if (filingType === 'amended') {
       return '02';
     }

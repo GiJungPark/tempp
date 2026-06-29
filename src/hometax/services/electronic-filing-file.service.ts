@@ -147,15 +147,16 @@ export class ElectronicFilingFileService {
   generateSimpleBusinessIncome(dto: GenerateSimpleBusinessIncomeStatementFileDto): GeneratedElectronicFile {
     const business = this.requireBusinessPlace(dto.businessPlace);
     const submitDate = this.fw.ymd(dto.submitDate ?? todayYmd());
-    const paymentYear = this.year(dto.paymentYear);
-    const paymentMonth = this.month(dto.paymentMonth);
-    // 사업소득 간이지급명세서 B10에는 상반기/하반기 지급시기 코드가 있다.
-    const paymentHalf = dto.paymentHalf ?? (Number(paymentMonth) <= 6 ? '1' : '2');
     // source는 원본 입력, calc는 계산된 세액/합계다. 둘을 같이 들고 가면 C레코드 작성이 명확해진다.
     const rows = this.requireRows(dto.recipients, 'recipients').map((row) => ({
       source: row,
       calc: this.calculateBusinessIncome(row),
     }));
+    // 지급연도/지급월은 사용자가 지급일자를 넣으면 거기서 계산하고, 없으면 귀속연월을 fallback으로 쓴다.
+    const paymentYear = this.year(dto.paymentYear ?? this.firstPaymentYear(rows.map((row) => row.source)));
+    const paymentMonth = this.month(dto.paymentMonth ?? this.firstPaymentMonth(rows.map((row) => row.source)));
+    // 사업소득 간이지급명세서 B10에는 상반기/하반기 지급시기 코드가 있다.
+    const paymentHalf = dto.paymentHalf ?? (Number(paymentMonth) <= 6 ? '1' : '2');
 
     // A 레코드는 여러 전자파일에서 거의 같은 구조라 commonSubmitterRecord로 만든다.
     const a = this.commonSubmitterRecord('A', '50', 170, business, submitDate, 5);
@@ -217,13 +218,14 @@ export class ElectronicFilingFileService {
   generateSimpleOtherIncome(dto: GenerateSimpleOtherIncomeStatementFileDto): GeneratedElectronicFile {
     const business = this.requireBusinessPlace(dto.businessPlace);
     const submitDate = this.fw.ymd(dto.submitDate ?? todayYmd());
-    const paymentYear = this.year(dto.paymentYear);
-    const paymentMonth = this.month(dto.paymentMonth);
     // 기타소득은 지급액, 필요경비, 소득금액, 세액을 함께 계산해야 한다.
     const rows = this.requireRows(dto.recipients, 'recipients').map((row) => ({
       source: row,
       calc: this.calculateOtherIncome(row),
     }));
+    // 지급연도/지급월은 사용자가 지급일자를 넣으면 거기서 계산하고, 없으면 귀속연월을 fallback으로 쓴다.
+    const paymentYear = this.year(dto.paymentYear ?? this.firstPaymentYear(rows.map((row) => row.source)));
+    const paymentMonth = this.month(dto.paymentMonth ?? this.firstPaymentMonth(rows.map((row) => row.source)));
 
     const a = this.commonSubmitterRecord('A', '55', 170, business, submitDate, 5);
     // B 레코드는 C 레코드의 지급액 합계를 검증하기 위한 집계 레코드다.
@@ -275,13 +277,13 @@ export class ElectronicFilingFileService {
   generateAnnualBusinessIncome(dto: GenerateAnnualBusinessIncomeStatementFileDto): GeneratedElectronicFile {
     const business = this.requireBusinessPlace(dto.businessPlace);
     const submitDate = this.fw.ymd(dto.submitDate ?? todayYmd());
-    const attributionYear = this.year(dto.attributionYear);
     // 원문상 C 레코드는 소득자별 + 귀속연도별 + 지급연도별 + 업종구분별 + 세율별로 합산한다.
     // 현재 입력은 이미 그 단위로 들어온다고 보고 1 row = 1 C 레코드로 생성한다.
     const rows = this.requireRows(dto.recipients, 'recipients').map((row) => ({
       source: row,
       calc: this.calculateBusinessIncome(row),
     }));
+    const attributionYear = this.year(dto.attributionYear ?? this.firstAttributionYear(rows.map((row) => row.source)));
 
     const a = this.commonSubmitterRecord('A', '24', 190, business, submitDate, 25);
     // B 레코드는 연간 지급건수/총지급액/세액 합계를 담는다.
@@ -345,7 +347,6 @@ export class ElectronicFilingFileService {
   generateAnnualOtherIncome(dto: GenerateAnnualOtherIncomeStatementFileDto): GeneratedElectronicFile {
     const business = this.requireBusinessPlace(dto.businessPlace);
     const submitDate = this.fw.ymd(dto.submitDate ?? todayYmd());
-    const attributionYear = this.year(dto.attributionYear);
     const rows = this.requireRows(dto.recipients, 'recipients').map((row) => {
       // 소득구분 64는 서화/골동품 D레코드가 반드시 필요하다. D레코드 구현 전에는 잘못된 파일 생성을 막는다.
       if (row.incomeTypeCode === '64') {
@@ -356,6 +357,7 @@ export class ElectronicFilingFileService {
         calc: this.calculateOtherIncome(row),
       };
     });
+    const attributionYear = this.year(dto.attributionYear ?? this.firstAttributionYear(rows.map((row) => row.source)));
 
     const a = this.commonSubmitterRecord('A', '23', 300, business, submitDate, 135);
     // B 레코드는 C 레코드의 지급건수/총지급액/소득금액/세액 합계를 담는다.
@@ -549,6 +551,26 @@ export class ElectronicFilingFileService {
   // 원천세 Header 귀속연월 기본값을 정할 때 첫 번째 소득자 귀속월을 찾는다.
   private firstAttributionYm(dto: GenerateWithholdingTaxFileDto): string | undefined {
     return [...(dto.businessIncomeRecipients ?? []), ...(dto.otherIncomeRecipients ?? [])][0]?.attributionYm;
+  }
+
+  // 지급일자가 있으면 지급일자의 연도, 없으면 귀속연월의 연도를 사용한다.
+  // 사용자는 "지급날짜"와 "귀속연월"만 입력하고, 전산매체의 지급연도는 여기서 파생된다.
+  private firstPaymentYear(rows: Array<BusinessIncomePaymentRecipientDto | OtherIncomePaymentRecipientDto>): string {
+    const first = this.requireRows(rows, 'recipients')[0];
+    return onlyDigits(first.paymentDate ?? first.attributionYm).slice(0, 4);
+  }
+
+  // 지급일자가 있으면 지급일자의 월, 없으면 귀속연월의 월을 사용한다.
+  // 간이지급명세서 B레코드의 지급월을 사용자에게 별도로 받지 않기 위한 파생값이다.
+  private firstPaymentMonth(rows: Array<BusinessIncomePaymentRecipientDto | OtherIncomePaymentRecipientDto>): string {
+    const first = this.requireRows(rows, 'recipients')[0];
+    const source = onlyDigits(first.paymentDate ?? first.attributionYm);
+    return source.length >= 6 ? source.slice(4, 6) : '';
+  }
+
+  // 연간 지급명세서 귀속연도 기본값은 첫 번째 소득자 귀속연월에서 가져온다.
+  private firstAttributionYear(rows: Array<BusinessIncomePaymentRecipientDto | OtherIncomePaymentRecipientDto>): string {
+    return onlyDigits(this.requireRows(rows, 'recipients')[0].attributionYm).slice(0, 4);
   }
 
   // 4자리 연도 검증 helper.

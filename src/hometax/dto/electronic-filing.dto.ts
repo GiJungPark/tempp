@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 // 전자파일 DTO는 요청 body의 모양을 설명한다.
 // Nest가 JSON body를 이 class 형태로 넘겨주고, service가 실제 고정폭 파일을 만든다.
@@ -63,22 +63,25 @@ export class IncomePaymentRecipientDto {
   @ApiProperty({ description: '소득자 주민등록번호/외국인등록번호/사업자번호', example: '9001011234567' })
   identityNo!: string;
 
-  @ApiPropertyOptional({ description: '내외국인 구분. 1=내국인, 9=외국인', enum: ['1', '9'], example: '1' })
+  @ApiProperty({ description: '소득자 전화번호. 전산매체 레코드에는 직접 쓰지 않지만 기획 입력값으로 보존', example: '01012345678' })
+  phone!: string;
+
+  @ApiHideProperty()
   foreignerYn?: ForeignerYn;
 
   @ApiProperty({ description: '귀속연월 YYYYMM', example: '202605' })
   attributionYm!: string;
 
-  @ApiPropertyOptional({ description: '지급일자 YYYYMMDD. 연간 지급명세서 지급연도 산출에 사용', example: '20260531' })
-  paymentDate?: string;
+  @ApiProperty({ description: '지급일자 YYYYMMDD. 간이지급명세서 지급연월과 지급명세서 지급연도 산출에 사용', example: '20260531' })
+  paymentDate!: string;
 
-  @ApiPropertyOptional({ description: '입력 금액 기준. gross=세전, net=세후', enum: ['gross', 'net'], example: 'gross' })
-  amountInputType?: AmountInputType;
+  @ApiProperty({ description: '입력 금액 기준. gross=세전, net=세후', enum: ['gross', 'net'], example: 'gross' })
+  amountInputType!: AmountInputType;
 
   @ApiProperty({ description: '입력 금액. amountInputType 기준으로 해석', example: 1000000 })
   amount!: number;
 
-  @ApiPropertyOptional({ description: '지급건수. 없으면 1', example: 1 })
+  @ApiHideProperty()
   paymentCount?: number;
 }
 
@@ -87,13 +90,13 @@ export class BusinessIncomePaymentRecipientDto extends IncomePaymentRecipientDto
   @ApiProperty({ description: '사업소득 업종코드', example: '940909' })
   industryCode!: string;
 
-  @ApiPropertyOptional({ description: '사업소득 세율. 없으면 업종코드 기준 기본값 사용', enum: [3, 5, 20], example: 3 })
+  @ApiHideProperty()
   taxRate?: 3 | 5 | 20;
 
-  @ApiPropertyOptional({ description: '소득자 사업자번호. 병의원 업종 851101 등에서 사용' })
+  @ApiHideProperty()
   recipientBusinessNo?: string;
 
-  @ApiPropertyOptional({ description: '소득자 상호. 연간 사업소득 지급명세서에서 사용' })
+  @ApiHideProperty()
   recipientBusinessName?: string;
 }
 
@@ -102,20 +105,20 @@ export class OtherIncomePaymentRecipientDto extends IncomePaymentRecipientDto {
   @ApiProperty({ description: '기타소득 소득구분코드. 서비스 MVP는 76/79 중심', example: '76' })
   incomeTypeCode!: string;
 
-  @ApiPropertyOptional({ description: '필요경비율. 없으면 0.6', example: 0.6 })
+  @ApiHideProperty()
   necessaryExpenseRate?: number;
 
-  @ApiPropertyOptional({ description: '필요경비 금액을 직접 지정할 때 사용' })
+  @ApiHideProperty()
   necessaryExpense?: number;
 
-  @ApiPropertyOptional({ description: '기타소득 세율. 없으면 소득구분코드 기준 기본값 사용', enum: [20, 15, 0, 30], example: 20 })
+  @ApiHideProperty()
   taxRate?: 20 | 15 | 0 | 30;
 }
 
 // 원천징수이행상황신고서 C103900 생성 요청.
 export class GenerateWithholdingTaxFileDto {
-  @ApiProperty({ description: '사업장/제출자 정보', type: ElectronicBusinessPlaceDto })
-  businessPlace!: ElectronicBusinessPlaceDto;
+  @ApiHideProperty()
+  businessPlace?: ElectronicBusinessPlaceDto;
 
   @ApiProperty({ description: '지급연월 YYYYMM', example: '202605' })
   paymentYm!: string;
@@ -123,13 +126,13 @@ export class GenerateWithholdingTaxFileDto {
   @ApiPropertyOptional({ description: '귀속연월 YYYYMM. 없으면 첫 소득자 귀속연월 또는 paymentYm 사용', example: '202605' })
   attributionYm?: string;
 
-  @ApiPropertyOptional({ description: '제출연월 YYYYMM. 없으면 paymentYm + 1', example: '202606' })
+  @ApiHideProperty()
   submitYm?: string;
 
-  @ApiPropertyOptional({ description: '작성일자 YYYYMMDD. 없으면 서버 오늘 날짜', example: '20260629' })
+  @ApiHideProperty()
   writtenDate?: string;
 
-  @ApiPropertyOptional({ description: '신고구분상세코드. 01=정기, 02=수정, 03=기한후', enum: ['01', '02', '03'], example: '01' })
+  @ApiHideProperty()
   reportDetailCode?: FilingDetailCode;
 
   @ApiPropertyOptional({ description: '사업소득 소득자 목록', type: [BusinessIncomePaymentRecipientDto] })
@@ -141,19 +144,19 @@ export class GenerateWithholdingTaxFileDto {
 
 // 간이지급명세서(거주자의 사업소득) 생성 요청.
 export class GenerateSimpleBusinessIncomeStatementFileDto {
-  @ApiProperty({ description: '사업장/제출자 정보', type: ElectronicBusinessPlaceDto })
-  businessPlace!: ElectronicBusinessPlaceDto;
+  @ApiHideProperty()
+  businessPlace?: ElectronicBusinessPlaceDto;
 
-  @ApiProperty({ description: '지급연도 YYYY', example: '2026' })
-  paymentYear!: string;
+  @ApiHideProperty()
+  paymentYear?: string;
 
-  @ApiProperty({ description: '지급월 MM', example: '05' })
-  paymentMonth!: string;
+  @ApiHideProperty()
+  paymentMonth?: string;
 
-  @ApiPropertyOptional({ description: '지급시기. 1=상반기, 2=하반기. 없으면 지급월 기준 자동', enum: ['1', '2'], example: '1' })
+  @ApiHideProperty()
   paymentHalf?: '1' | '2';
 
-  @ApiPropertyOptional({ description: '제출연월일 YYYYMMDD. 없으면 서버 오늘 날짜', example: '20260629' })
+  @ApiHideProperty()
   submitDate?: string;
 
   @ApiProperty({ description: '사업소득 소득자 목록', type: [BusinessIncomePaymentRecipientDto] })
@@ -162,16 +165,16 @@ export class GenerateSimpleBusinessIncomeStatementFileDto {
 
 // 간이지급명세서(거주자의 기타소득) 생성 요청.
 export class GenerateSimpleOtherIncomeStatementFileDto {
-  @ApiProperty({ description: '사업장/제출자 정보', type: ElectronicBusinessPlaceDto })
-  businessPlace!: ElectronicBusinessPlaceDto;
+  @ApiHideProperty()
+  businessPlace?: ElectronicBusinessPlaceDto;
 
-  @ApiProperty({ description: '지급연도 YYYY', example: '2026' })
-  paymentYear!: string;
+  @ApiHideProperty()
+  paymentYear?: string;
 
-  @ApiProperty({ description: '지급월 MM', example: '05' })
-  paymentMonth!: string;
+  @ApiHideProperty()
+  paymentMonth?: string;
 
-  @ApiPropertyOptional({ description: '제출연월일 YYYYMMDD. 없으면 서버 오늘 날짜', example: '20260629' })
+  @ApiHideProperty()
   submitDate?: string;
 
   @ApiProperty({ description: '기타소득 소득자 목록', type: [OtherIncomePaymentRecipientDto] })
@@ -180,19 +183,19 @@ export class GenerateSimpleOtherIncomeStatementFileDto {
 
 // 연간 사업소득 지급명세서 생성 요청.
 export class GenerateAnnualBusinessIncomeStatementFileDto {
-  @ApiProperty({ description: '사업장/제출자 정보', type: ElectronicBusinessPlaceDto })
-  businessPlace!: ElectronicBusinessPlaceDto;
+  @ApiHideProperty()
+  businessPlace?: ElectronicBusinessPlaceDto;
 
-  @ApiProperty({ description: '귀속연도 YYYY', example: '2026' })
-  attributionYear!: string;
+  @ApiHideProperty()
+  attributionYear?: string;
 
-  @ApiPropertyOptional({ description: '제출연월일 YYYYMMDD. 없으면 서버 오늘 날짜', example: '20270228' })
+  @ApiHideProperty()
   submitDate?: string;
 
-  @ApiPropertyOptional({ description: '파일명 prefix. 사업소득 지급명세서는 샘플 기준 F', example: 'F' })
+  @ApiHideProperty()
   fileNamePrefix?: string;
 
-  @ApiPropertyOptional({ description: '제출대상기간코드. 1=연간 합산, 2=휴폐업 수시, 3=수시 분할', enum: ['1', '2', '3'], example: '1' })
+  @ApiHideProperty()
   submissionPeriodCode?: '1' | '2' | '3';
 
   @ApiProperty({ description: '사업소득 소득자 목록', type: [BusinessIncomePaymentRecipientDto] })
@@ -201,19 +204,19 @@ export class GenerateAnnualBusinessIncomeStatementFileDto {
 
 // 연간 기타소득 지급명세서 생성 요청.
 export class GenerateAnnualOtherIncomeStatementFileDto {
-  @ApiProperty({ description: '사업장/제출자 정보', type: ElectronicBusinessPlaceDto })
-  businessPlace!: ElectronicBusinessPlaceDto;
+  @ApiHideProperty()
+  businessPlace?: ElectronicBusinessPlaceDto;
 
-  @ApiProperty({ description: '귀속연도 YYYY', example: '2026' })
-  attributionYear!: string;
+  @ApiHideProperty()
+  attributionYear?: string;
 
-  @ApiPropertyOptional({ description: '제출연월일 YYYYMMDD. 없으면 서버 오늘 날짜', example: '20270228' })
+  @ApiHideProperty()
   submitDate?: string;
 
-  @ApiPropertyOptional({ description: '파일명 prefix. 기타소득 지급명세서는 원문 확인 전까지 override 용도', example: 'G' })
+  @ApiHideProperty()
   fileNamePrefix?: string;
 
-  @ApiPropertyOptional({ description: '제출대상기간코드. 1=연간 합산, 2=휴폐업 수시, 3=수시 분할', enum: ['1', '2', '3'], example: '1' })
+  @ApiHideProperty()
   submissionPeriodCode?: '1' | '2' | '3';
 
   @ApiProperty({ description: '기타소득 소득자 목록', type: [OtherIncomePaymentRecipientDto] })

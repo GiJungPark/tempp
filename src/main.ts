@@ -6,6 +6,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
 
+  // Swagger는 POC를 다른 프레임워크로 옮길 때도 요청/응답 shape를 빠르게 확인하기 위한 문서다.
+  // DTO에서 @ApiHideProperty 처리한 값은 사용자 입력값이 아니라 서버 기본값 또는 홈택스 사업장 조회값으로 채운다.
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Hometax API')
     .setDescription('홈택스 간편인증, 사업장 조회, 전자파일 생성, 전자신고 업로드/검증 POC API 명세')

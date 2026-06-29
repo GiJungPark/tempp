@@ -17,6 +17,8 @@ import { HometaxTehtSessionClient } from './clients/hometax-teht-session.client'
 import { HometaxUploadClient } from './clients/hometax-upload.client';
 import { HometaxWqActionClient } from './clients/hometax-wq-action.client';
 
+// 홈택스 모듈은 화면 스크래핑 client, 세션 보관 service, 전자파일 generator를 한곳에 묶는다.
+// 현재 POC는 테스트 사용자 1명 기준이라 HometaxSessionService 하나가 로그인 쿠키와 sessionMap을 공유한다.
 @Module({
   controllers: [
     HometaxAuthController,
