@@ -23,6 +23,12 @@ export interface HometaxUploadResult {
   serverPath?: string;
 }
 
+export interface HometaxUploadOptions {
+  baseURL?: string;
+  referer?: string;
+  uploadTypeCd?: string;
+}
+
 @Injectable()
 export class HometaxUploadClient {
   private readonly logger = new Logger(HometaxUploadClient.name);
@@ -34,6 +40,15 @@ export class HometaxUploadClient {
   ) {}
 
   async uploadWithholdingFile(file: Express.Multer.File): Promise<HometaxUploadResult> {
+    return this.uploadElectronicFile(file, {
+      baseURL: this.tehtBaseUrl,
+      referer:
+        'https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&tmIdx=41&tm2lIdx=4106000000&tm3lIdx=4106010000',
+      uploadTypeCd: '02',
+    });
+  }
+
+  async uploadElectronicFile(file: Express.Multer.File, options: HometaxUploadOptions = {}): Promise<HometaxUploadResult> {
     const sessionMap = this.sessionService.requireSessionMap();
     const subDir = `UPLOAD_DIR/${this.todayYmd()}/${sessionMap.pubcUserNo}`;
     const folderNameRule = `/rn/${subDir}`;
@@ -43,6 +58,7 @@ export class HometaxUploadClient {
       guid,
       file,
       folderNameRule,
+      options,
     });
     this.logger.log(`RAON startUpload path=${start.serverPath}, size=${start.size}`);
 
@@ -50,6 +66,7 @@ export class HometaxUploadClient {
       guid,
       file,
       serverPath: start.serverPath,
+      options,
     });
     this.logger.log('RAON uploadChunk complete');
 
@@ -57,6 +74,7 @@ export class HometaxUploadClient {
       guid,
       file,
       folderNameRule,
+      options,
     });
     this.logger.log(`RAON completeUpload uploadName=${complete.uploadName}`);
 
@@ -76,6 +94,7 @@ export class HometaxUploadClient {
     guid: string;
     file: Express.Multer.File;
     folderNameRule: string;
+    options: HometaxUploadOptions;
   }): Promise<RaonkUploadStartResult> {
     const command = buildRaonkStartCommand({
       guid: params.guid,
@@ -86,7 +105,7 @@ export class HometaxUploadClient {
     const field = encodeRaonkFormField(command);
     const response = await this.postRaonkForm({
       [field.name]: field.value,
-    });
+    }, params.options);
 
     this.logger.debug(`RAON start response: ${this.responseSummary(response)}`);
     return parseRaonkStartResponse(response);
@@ -96,6 +115,7 @@ export class HometaxUploadClient {
     guid: string;
     file: Express.Multer.File;
     serverPath: string;
+    options: HometaxUploadOptions;
   }): Promise<void> {
     const command = buildRaonkChunkCommand({
       guid: params.guid,
@@ -112,14 +132,16 @@ export class HometaxUploadClient {
 
     const response = await this.http.request<string>({
       method: 'POST',
-      baseURL: this.tehtBaseUrl,
-      url: `/fileUploadDownloadNX.do?mode=upload&uploadTypeCd=02&onlineBatch=batch&raonk=${this.createRaonkRequestId()}`,
+      baseURL: params.options.baseURL ?? this.tehtBaseUrl,
+      url:
+        `/fileUploadDownloadNX.do?mode=upload&uploadTypeCd=${params.options.uploadTypeCd ?? '02'}` +
+        `&onlineBatch=batch&raonk=${this.createRaonkRequestId()}`,
       data: form,
       rawBody: true,
       responseType: 'text',
       headers: {
         ...form.getHeaders(),
-        ...this.commonHeaders(),
+        ...this.commonHeaders(params.options.referer),
       },
     });
 
@@ -131,6 +153,7 @@ export class HometaxUploadClient {
     guid: string;
     file: Express.Multer.File;
     folderNameRule: string;
+    options: HometaxUploadOptions;
   }): Promise<RaonkUploadCompleteResult> {
     const command = buildRaonkCompleteCommand({
       guid: params.guid,
@@ -140,32 +163,33 @@ export class HometaxUploadClient {
     const field = encodeRaonkFormField(command);
     const response = await this.postRaonkForm({
       [field.name]: field.value,
-    });
+    }, params.options);
 
     this.logger.debug(`RAON complete response: ${this.responseSummary(response)}`);
     return parseRaonkCompleteResponse(response);
   }
 
-  private postRaonkForm(data: Record<string, string>): Promise<string> {
+  private postRaonkForm(data: Record<string, string>, options: HometaxUploadOptions): Promise<string> {
     return this.http.request<string>({
       method: 'POST',
-      baseURL: this.tehtBaseUrl,
-      url: '/fileUploadDownloadNX.do?mode=upload&uploadTypeCd=02&onlineBatch=batch',
+      baseURL: options.baseURL ?? this.tehtBaseUrl,
+      url: `/fileUploadDownloadNX.do?mode=upload&uploadTypeCd=${options.uploadTypeCd ?? '02'}&onlineBatch=batch`,
       data: new URLSearchParams(data).toString(),
       rawBody: true,
       responseType: 'text',
       headers: {
         Accept: '*/*',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        ...this.commonHeaders(),
+        ...this.commonHeaders(options.referer),
       },
     });
   }
 
-  private commonHeaders(): Record<string, string> {
+  private commonHeaders(referer?: string): Record<string, string> {
     return {
       Origin: 'https://hometax.go.kr',
       Referer:
+        referer ??
         'https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&tmIdx=41&tm2lIdx=4106000000&tm3lIdx=4106010000',
     };
   }

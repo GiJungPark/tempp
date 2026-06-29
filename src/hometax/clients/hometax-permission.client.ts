@@ -61,6 +61,10 @@ export class HometaxPermissionClient {
     return this.requestPermission('UTXPPAAA24', this.postLoginPayload('UTXPPAAA24'));
   }
 
+  async requestScreenPermission(screenId: string, withLoginPayload = true): Promise<PermissionResponse> {
+    return this.requestPermission(screenId, withLoginPayload ? this.postLoginPayload(screenId) : undefined);
+  }
+
   private async requestPermission(
     screenId: string,
     form?: Record<string, string>,

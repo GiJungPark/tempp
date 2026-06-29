@@ -1,4 +1,17 @@
+---
+aliases:
+  - 원천세 API 분석
+  - 홈택스 원천세 전자신고 API 분석
+tags:
+  - hometax
+  - scraping
+  - withholding-tax
+  - raonk
+---
+
 # 홈택스 원천세 전자신고 API 분석
+
+관련 문서: [[docs/스크래핑/index|스크래핑 인덱스]], [[docs/스크래핑/홈택스 스크래핑 구현 스펙]], [[docs/전자자료/원천세/원천세 신고 전산매체]], [[docs/전자자료/공통 전자파일 생성 규칙]]
 
 ## 목표
 
