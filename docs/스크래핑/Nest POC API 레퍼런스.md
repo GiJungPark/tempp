@@ -44,6 +44,18 @@ npm run start:dev
 http://localhost:3000
 ```
 
+Swagger UI:
+
+```text
+http://localhost:3000/api-docs
+```
+
+OpenAPI JSON:
+
+```text
+http://localhost:3000/api-docs-json
+```
+
 ### 세션 순서
 
 대부분의 업무 API는 아래 순서 이후 호출해야 한다.
