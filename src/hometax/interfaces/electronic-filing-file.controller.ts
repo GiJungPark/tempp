@@ -11,7 +11,7 @@ import {
 } from '../dto/electronic-filing.dto';
 import { ElectronicFilingFileService } from '../services/electronic-filing-file.service';
 import { GeneratedElectronicFile } from '../efile/fixed-width';
-import { HometaxBusinessPlaceService } from '../services/hometax-business-place.service';
+import { HometaxBusinessPlaceService } from '../../hometax-scraping/services/hometax-business-place.service';
 
 // 홈택스 업로드 API와 별개로, 전자파일 텍스트 자체를 만들어주는 API다.
 // 반환값의 contentBase64를 파일로 저장하거나 곧바로 업로드 검증 API에 넘길 수 있다.

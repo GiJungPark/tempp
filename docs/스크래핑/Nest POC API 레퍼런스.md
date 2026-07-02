@@ -30,6 +30,17 @@ tags:
 
 현재 구현은 테스트 사용자 1명 기준이다. 세션은 사용자별로 분리하지 않고 서버 singleton 메모리 세션 하나에 쿠키, OACX token, 홈택스 `sessionMap`을 이어서 저장한다.
 
+## 모듈 경계
+
+홈택스 화면 연동은 `src/hometax-scraping` 모듈에 격리한다.
+
+| 모듈 | 책임 |
+| --- | --- |
+| `hometax-scraping` | 간편인증, 홈택스 세션 캐시, 사업장 조회, TEHT 세션 연결, RAON 업로드, wqAction 검증/제출 |
+| `hometax` | 원천세/간이지급명세서/지급명세서 전자파일 생성 API와 고정폭 전산매체 생성 로직 |
+
+다른 모듈은 홈택스 쿠키, OACX token, `sessionMap`, `screenId`, `actionId`, NTS payload, RAON command를 직접 다루지 않는다. 필요한 경우 `hometax-scraping`이 제공하는 입력/반환 DTO 또는 service를 통해서만 소통한다.
+
 ## 공통 전제
 
 ### 서버

@@ -7,6 +7,8 @@ import {
 
 @Injectable()
 export class HometaxSessionService {
+  // POC 단계의 홈택스 세션 캐시.
+  // 현재는 테스트 사용자 1명 기준 singleton 메모리 캐시로 두고, 나중에 sessionKey/Redis store로 교체할 수 있게 이 service 안에 격리한다.
   private session: HometaxRuntimeSession = createEmptyHometaxSession();
 
   get(): HometaxRuntimeSession {

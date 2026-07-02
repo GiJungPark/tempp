@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HometaxPermissionClient } from '../clients/hometax-permission.client';
 import { HometaxSessionService } from './hometax-session.service';
 import { HometaxWqActionClient } from '../clients/hometax-wq-action.client';
-import { ElectronicBusinessPlaceDto } from '../dto/electronic-filing.dto';
+import { ElectronicBusinessPlaceDto } from '../../hometax/dto/electronic-filing.dto';
 
 interface FlatBusinessPlaceCandidate {
   key: string;
