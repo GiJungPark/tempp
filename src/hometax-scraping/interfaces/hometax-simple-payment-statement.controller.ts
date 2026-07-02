@@ -5,9 +5,9 @@ import { memoryStorage } from 'multer';
 import { ValidateSimplePaymentStatementFileDto } from '../dto/simple-payment-statement.dto';
 import { HometaxSimplePaymentStatementService } from '../services/hometax-simple-payment-statement.service';
 
-@ApiTags('simple-payment-statements')
-@Controller('hometax/simple-payment-statements')
-export class HometaxSimplePaymentStatementController {
+@ApiTags('dev-simple-payment-statements')
+@Controller('dev/hometax/simple-payment-statements')
+export class DevHometaxSimplePaymentStatementController {
   constructor(private readonly simplePaymentStatementService: HometaxSimplePaymentStatementService) {}
 
   @ApiOperation({ summary: '간이지급명세서 변환파일 제출 profile 조회' })

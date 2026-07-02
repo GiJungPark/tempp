@@ -5,9 +5,9 @@ import { memoryStorage } from 'multer';
 import { SubmitWithholdingTaxDto, ValidateWithholdingTaxFileDto } from '../dto/withholding-tax.dto';
 import { HometaxWithholdingTaxService } from '../services/hometax-withholding-tax.service';
 
-@ApiTags('withholding-tax')
-@Controller('hometax/withholding-tax')
-export class HometaxWithholdingTaxController {
+@ApiTags('dev-withholding-tax')
+@Controller('dev/hometax/withholding-tax')
+export class DevHometaxWithholdingTaxController {
   constructor(private readonly withholdingTaxService: HometaxWithholdingTaxService) {}
 
   @ApiOperation({ summary: '원천세 변환파일 업로드/검증', description: 'multipart file을 RAON 업로드 후 홈택스 원천세 형식/내용 검증 상태를 조회합니다.' })

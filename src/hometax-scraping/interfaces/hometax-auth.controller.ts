@@ -3,9 +3,9 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ConfirmSimpleAuthDto, RequestSimpleAuthDto } from '../dto/auth.dto';
 import { HometaxAuthService } from '../services/hometax-auth.service';
 
-@ApiTags('auth')
-@Controller('hometax/auth')
-export class HometaxAuthController {
+@ApiTags('dev-auth')
+@Controller('dev/hometax/auth')
+export class DevHometaxAuthController {
   constructor(private readonly authService: HometaxAuthService) {}
 
   @ApiOperation({ summary: '간편인증 요청', description: '이름/전화번호/생년월일로 홈택스 간편인증 요청을 시작합니다.' })

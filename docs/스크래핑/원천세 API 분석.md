@@ -89,8 +89,8 @@ class HometaxRuntimeSession {
 요청 API도 `userId` 없이 다음처럼 단순화할 수 있다.
 
 ```text
-POST /hometax/auth/request
-POST /hometax/auth/confirm
+POST /dev/hometax/auth/request
+POST /dev/hometax/auth/confirm
 GET  /hometax/session
 POST /hometax/withholding/upload-and-validate
 POST /hometax/withholding/submit
@@ -529,8 +529,8 @@ RAON의 `_fn_$mEP`는 강한 암호화가 아니라 `utf8 base64` 결과에 `rao
 
 구현 반영:
 
-- [src/hometax/utils/raonk-upload.ts](/Users/nox/Documents/홈택스/src/hometax/utils/raonk-upload.ts): RAON command 생성/인코딩/응답 복호화
-- [src/hometax/clients/hometax-upload.client.ts](/Users/nox/Documents/홈택스/src/hometax/clients/hometax-upload.client.ts): `c01 -> c02 multipart -> c03` 업로드 절차
+- [src/hometax-scraping/utils/raonk-upload.ts](/Users/nox/Documents/홈택스/src/hometax-scraping/utils/raonk-upload.ts): RAON command 생성/인코딩/응답 복호화
+- [src/hometax-scraping/clients/hometax-upload.client.ts](/Users/nox/Documents/홈택스/src/hometax-scraping/clients/hometax-upload.client.ts): `c01 -> c02 multipart -> c03` 업로드 절차
 
 주의할 점:
 
@@ -584,24 +584,24 @@ fileAdmDVOList <- dlt_fileList
 ## NestJS 테스트용 API 흐름
 
 ```text
-POST /hometax/auth/request
+POST /dev/hometax/auth/request
 body: { name, phoneNumber, birthday }
 
-POST /hometax/auth/confirm
+POST /dev/hometax/auth/confirm
 body: {}
 
-GET /hometax/auth/session
+GET /dev/hometax/auth/session
 response: { userId, tin, pubcUserNo, txprDscmNo, txaaYn, userClsfCd }
 
-GET /hometax/business-places
+GET /dev/hometax/business-places
 
-POST /hometax/withholding-tax/validate
+POST /dev/hometax/withholding-tax/validate
 multipart: file
 
-GET /hometax/withholding-tax/submit-targets
+GET /dev/hometax/withholding-tax/submit-targets
 query: fleSbmsCvaId
 
-POST /hometax/withholding-tax/submit
+POST /dev/hometax/withholding-tax/submit
 body: { fleSbmsCvaId, confirmSubmit: true }
 ```
 

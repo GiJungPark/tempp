@@ -195,17 +195,17 @@ uploadTypeCd
 원천세와 동일한 형태로 구현하되, profile을 분리한다.
 
 ```text
-POST /hometax/auth/request
-POST /hometax/auth/confirm
+POST /dev/hometax/auth/request
+POST /dev/hometax/auth/confirm
 
-GET  /hometax/simple-payment-statements/profiles
+GET  /dev/hometax/simple-payment-statements/profiles
 
-POST /hometax/simple-payment-statements/business-income/validate
-POST /hometax/simple-payment-statements/other-income/validate
+POST /dev/hometax/simple-payment-statements/business-income/validate
+POST /dev/hometax/simple-payment-statements/other-income/validate
 
-GET  /hometax/simple-payment-statements/submit-targets?fleSbmsCvaId=...
+GET  /dev/hometax/simple-payment-statements/submit-targets?fleSbmsCvaId=...
 
-POST /hometax/simple-payment-statements/submit
+POST /dev/hometax/simple-payment-statements/submit
 body: { fleSbmsCvaId, incomeType, confirmSubmit: true }
 ```
 
@@ -216,16 +216,16 @@ body: { fleSbmsCvaId, incomeType, confirmSubmit: true }
 2026-06-27 기준 NestJS에 아래 API를 추가했다.
 
 ```text
-GET  /hometax/simple-payment-statements/profiles
+GET  /dev/hometax/simple-payment-statements/profiles
 
-POST /hometax/simple-payment-statements/business-income/validate
-POST /hometax/simple-payment-statements/other-income/validate
+POST /dev/hometax/simple-payment-statements/business-income/validate
+POST /dev/hometax/simple-payment-statements/other-income/validate
 ```
 
 호출 예:
 
 ```bash
-curl -X POST http://localhost:3000/hometax/simple-payment-statements/other-income/validate \
+curl -X POST http://localhost:3000/dev/hometax/simple-payment-statements/other-income/validate \
   -F 'file=@/path/to/simple-statement-file.01' \
   -F 'paymentYear=2026' \
   -F 'paymentMonth=05'

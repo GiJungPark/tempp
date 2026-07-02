@@ -87,7 +87,7 @@ export class HometaxOacxClient {
   async getAuthResult(): Promise<OacxAuthResultResponse> {
     const session = this.sessionService.get();
     if (!session.authCommand) {
-      throw new Error('간편인증 요청 정보가 없습니다. /hometax/auth/request를 먼저 호출하세요.');
+      throw new Error('간편인증 요청 정보가 없습니다. /dev/hometax/auth/request를 먼저 호출하세요.');
     }
 
     const response = await this.http.postJson<OacxAuthResultResponse>(

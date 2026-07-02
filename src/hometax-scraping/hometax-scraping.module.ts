@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { HometaxAuthController } from './interfaces/hometax-auth.controller';
-import { HometaxBusinessPlaceController } from './interfaces/hometax-business-place.controller';
-import { HometaxSimplePaymentStatementController } from './interfaces/hometax-simple-payment-statement.controller';
-import { HometaxWithholdingTaxController } from './interfaces/hometax-withholding-tax.controller';
+import { DevHometaxAuthController } from './interfaces/hometax-auth.controller';
+import { DevHometaxBusinessPlaceController } from './interfaces/hometax-business-place.controller';
+import { DevHometaxSimplePaymentStatementController } from './interfaces/hometax-simple-payment-statement.controller';
+import { DevHometaxWithholdingTaxController } from './interfaces/hometax-withholding-tax.controller';
 import { HometaxHttpClient } from './clients/hometax-http.client';
 import { HometaxOacxClient } from './clients/hometax-oacx.client';
 import { HometaxPermissionClient } from './clients/hometax-permission.client';
@@ -19,10 +19,10 @@ import { HometaxWithholdingTaxService } from './services/hometax-withholding-tax
 // 외부 모듈은 이 모듈의 service DTO만 사용하고, 쿠키/OACX/sessionMap/RAON/NTS payload 세부사항은 알지 못하게 한다.
 @Module({
   controllers: [
-    HometaxAuthController,
-    HometaxBusinessPlaceController,
-    HometaxSimplePaymentStatementController,
-    HometaxWithholdingTaxController,
+    DevHometaxAuthController,
+    DevHometaxBusinessPlaceController,
+    DevHometaxSimplePaymentStatementController,
+    DevHometaxWithholdingTaxController,
   ],
   providers: [
     HometaxAuthService,

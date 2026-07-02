@@ -41,6 +41,8 @@ tags:
 
 다른 모듈은 홈택스 쿠키, OACX token, `sessionMap`, `screenId`, `actionId`, NTS payload, RAON command를 직접 다루지 않는다. 필요한 경우 `hometax-scraping`이 제공하는 입력/반환 DTO 또는 service를 통해서만 소통한다.
 
+현재 `hometax-scraping` controller는 스크래핑 수동 검증을 위한 개발용 엔드포인트다. 그래서 route prefix는 `/dev/hometax/...`를 사용한다. 실제 서비스 로직에서는 controller를 거치지 않고 application service가 `hometax-scraping` service/port를 호출하는 방향으로 전환한다.
+
 ## 공통 전제
 
 ### 서버
@@ -72,13 +74,13 @@ http://localhost:3000/api-docs-json
 대부분의 업무 API는 아래 순서 이후 호출해야 한다.
 
 ```text
-1. POST /hometax/auth/request
+1. POST /dev/hometax/auth/request
 2. 휴대폰 카카오 간편인증 승인
-3. POST /hometax/auth/confirm
+3. POST /dev/hometax/auth/confirm
 4. 업무 API 호출
 ```
 
-`/hometax/auth/confirm` 성공 후 `sessionMap`에 최소 아래 값이 있어야 한다.
+`/dev/hometax/auth/confirm` 성공 후 `sessionMap`에 최소 아래 값이 있어야 한다.
 
 ```text
 userId
@@ -96,7 +98,7 @@ userClsfCd
 ### 간편인증 요청 외부 API
 
 ```http
-POST /hometax/auth/request
+POST /dev/hometax/auth/request
 Content-Type: application/json
 ```
 
@@ -169,7 +171,7 @@ POST https://hometax.go.kr/oacx/api/v1.0/authen/request
 ### 간편인증 확인 외부 API
 
 ```http
-POST /hometax/auth/confirm
+POST /dev/hometax/auth/confirm
 Content-Type: application/json
 ```
 
@@ -236,7 +238,7 @@ userScrnRslnYcCnt=1440
 ### 세션 확인
 
 ```http
-GET /hometax/auth/session
+GET /dev/hometax/auth/session
 ```
 
 응답:
@@ -256,7 +258,7 @@ GET /hometax/auth/session
 ### 세션 초기화
 
 ```http
-POST /hometax/auth/reset
+POST /dev/hometax/auth/reset
 ```
 
 서버 메모리의 쿠키, OACX token, `sessionMap`, TEHT 연결 상태를 모두 비운다.
@@ -266,7 +268,7 @@ POST /hometax/auth/reset
 ### 사업장 정보 조회 외부 API
 
 ```http
-GET /hometax/business-places
+GET /dev/hometax/business-places
 ```
 
 ### 사업장 정보 조회 내부 홈택스 호출
@@ -311,14 +313,14 @@ NTS_REQUEST_SYSTEM_CODE_P = TEHT
 ### 원천세 파일 검증 외부 API
 
 ```http
-POST /hometax/withholding-tax/validate
+POST /dev/hometax/withholding-tax/validate
 Content-Type: multipart/form-data
 ```
 
 curl:
 
 ```bash
-curl -X POST http://localhost:3000/hometax/withholding-tax/validate \
+curl -X POST http://localhost:3000/dev/hometax/withholding-tax/validate \
   -F 'file=@/Users/nox/Downloads/20260213C103900.01'
 ```
 
@@ -491,7 +493,7 @@ payload:
 ### 원천세 제출대상 조회 외부 API
 
 ```http
-GET /hometax/withholding-tax/submit-targets?fleSbmsCvaId={검증ID}
+GET /dev/hometax/withholding-tax/submit-targets?fleSbmsCvaId={검증ID}
 ```
 
 ### 원천세 제출대상 조회 내부 홈택스 호출
@@ -520,7 +522,7 @@ payload:
 ### 원천세 최종 제출 외부 API
 
 ```http
-POST /hometax/withholding-tax/submit
+POST /dev/hometax/withholding-tax/submit
 Content-Type: application/json
 ```
 
@@ -572,7 +574,7 @@ payload:
 ### 간이지급명세서 profile 조회 외부 API
 
 ```http
-GET /hometax/simple-payment-statements/profiles
+GET /dev/hometax/simple-payment-statements/profiles
 ```
 
 응답에는 현재 구현된 사업소득/기타소득 profile 후보가 나온다.
@@ -616,14 +618,14 @@ stmnKndCd
 ### 사업소득 간이지급명세서 검증 외부 API
 
 ```http
-POST /hometax/simple-payment-statements/business-income/validate
+POST /dev/hometax/simple-payment-statements/business-income/validate
 Content-Type: multipart/form-data
 ```
 
 curl:
 
 ```bash
-curl -X POST http://localhost:3000/hometax/simple-payment-statements/business-income/validate \
+curl -X POST http://localhost:3000/dev/hometax/simple-payment-statements/business-income/validate \
   -F 'file=@/path/to/business-income-file.01' \
   -F 'paymentYear=2026' \
   -F 'paymentMonth=05'
@@ -632,7 +634,7 @@ curl -X POST http://localhost:3000/hometax/simple-payment-statements/business-in
 override 예:
 
 ```bash
-curl -X POST http://localhost:3000/hometax/simple-payment-statements/business-income/validate \
+curl -X POST http://localhost:3000/dev/hometax/simple-payment-statements/business-income/validate \
   -F 'file=@/path/to/business-income-file.01' \
   -F 'paymentYear=2026' \
   -F 'paymentMonth=05' \
@@ -679,14 +681,14 @@ curl -X POST http://localhost:3000/hometax/simple-payment-statements/business-in
 ### 기타소득 간이지급명세서 검증 외부 API
 
 ```http
-POST /hometax/simple-payment-statements/other-income/validate
+POST /dev/hometax/simple-payment-statements/other-income/validate
 Content-Type: multipart/form-data
 ```
 
 curl:
 
 ```bash
-curl -X POST http://localhost:3000/hometax/simple-payment-statements/other-income/validate \
+curl -X POST http://localhost:3000/dev/hometax/simple-payment-statements/other-income/validate \
   -F 'file=@/path/to/other-income-file.01' \
   -F 'paymentYear=2026' \
   -F 'paymentMonth=05'
@@ -759,7 +761,7 @@ Swagger에는 기획서 기준 사용자 입력값만 노출한다. 전산매체
 
 | 값 | 처리 |
 | --- | --- |
-| 사업장/제출자 정보 | 컨트롤러가 `GET /hometax/business-places`와 같은 홈택스 사업장 조회 action을 호출한 뒤 서버 내부에서 주입 |
+| 사업장/제출자 정보 | 컨트롤러가 `GET /dev/hometax/business-places`와 같은 홈택스 사업장 조회 action을 호출한 뒤 서버 내부에서 주입 |
 | 관할 세무서 코드 | 사업장 정보에 있으면 사용, 없으면 `source/기준자료/국세청_세무서별_관할구역_20260408.csv`로 주소 매칭 |
 | 제출연월/작성일/제출일 | 지급연월 + 신고기한 또는 서버 오늘 날짜 |
 | 신고구분상세코드 | 기본 `01` 정기신고 |
@@ -1043,15 +1045,15 @@ ATESFAAA001K01 polling payload
 
 | 기능 | 파일 |
 | --- | --- |
-| 간편인증 외부 API | `src/hometax/interfaces/hometax-auth.controller.ts` |
-| 간편인증 서비스 | `src/hometax/services/hometax-auth.service.ts` |
-| OACX 클라이언트 | `src/hometax/clients/hometax-oacx.client.ts` |
-| permission / pubcLogin | `src/hometax/clients/hometax-permission.client.ts` |
-| TEHT 세션 연결 | `src/hometax/clients/hometax-teht-session.client.ts` |
-| wqAction 공통 호출 | `src/hometax/clients/hometax-wq-action.client.ts` |
-| NTS payload | `src/hometax/utils/nts-payload.ts` |
-| RAON 업로드 클라이언트 | `src/hometax/clients/hometax-upload.client.ts` |
-| RAON command/인코딩 | `src/hometax/utils/raonk-upload.ts` |
-| 사업장 조회 | `src/hometax/services/hometax-business-place.service.ts` |
-| 원천세 검증/제출 | `src/hometax/services/hometax-withholding-tax.service.ts` |
-| 간이지급명세서 검증 | `src/hometax/services/hometax-simple-payment-statement.service.ts` |
+| 간편인증 외부 API | `src/hometax-scraping/interfaces/hometax-auth.controller.ts` |
+| 간편인증 서비스 | `src/hometax-scraping/services/hometax-auth.service.ts` |
+| OACX 클라이언트 | `src/hometax-scraping/clients/hometax-oacx.client.ts` |
+| permission / pubcLogin | `src/hometax-scraping/clients/hometax-permission.client.ts` |
+| TEHT 세션 연결 | `src/hometax-scraping/clients/hometax-teht-session.client.ts` |
+| wqAction 공통 호출 | `src/hometax-scraping/clients/hometax-wq-action.client.ts` |
+| NTS payload | `src/hometax-scraping/utils/nts-payload.ts` |
+| RAON 업로드 클라이언트 | `src/hometax-scraping/clients/hometax-upload.client.ts` |
+| RAON command/인코딩 | `src/hometax-scraping/utils/raonk-upload.ts` |
+| 사업장 조회 | `src/hometax-scraping/services/hometax-business-place.service.ts` |
+| 원천세 검증/제출 | `src/hometax-scraping/services/hometax-withholding-tax.service.ts` |
+| 간이지급명세서 검증 | `src/hometax-scraping/services/hometax-simple-payment-statement.service.ts` |
